@@ -11,7 +11,7 @@ namespace Booking.Models.Entities
         public byte[] PasswordSalt { get; set; }
         public string? RefreshToken { get; set; }
         public DateTime? RefreshTokenExpirationDate { get; set; }
-        public Status Status { get; set; }
+        public Status Status { get; set; } = Status.Active;
         public Role Role { get; set; }
         public string email { get; set; }
 

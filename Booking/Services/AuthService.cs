@@ -3,7 +3,7 @@ using Booking.Data;
 using Booking.Interfaces;
 using Booking.Models.DTOs;
 using Booking.Models.Entities;
-using Booking.Responses.AuthResponses;
+using Booking.Responses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -16,6 +16,7 @@ namespace Booking.Services
 {
     public class AuthService : IAuthService
     {
+        private Response Response { get; set; }
 
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _configuration;
@@ -27,12 +28,9 @@ namespace Booking.Services
         }
 
 
-
-       
-
-        public async Task<RegisterResponse> Register(UserRegisterDTO registerDTO)
+        public async Task<ResponseC> Register(UserRegisterDTO registerDTO)
         {
-            var res = new RegisterResponse("",false);
+            var res = new ResponseC(false, "");
             if (registerDTO.UserRole == Enums.Role.SuperAdmin)
             {
                 res.Success = false;
@@ -40,9 +38,9 @@ namespace Booking.Services
                 return res;
 
             }
-            
 
-            if(await UserExists(registerDTO.UserName))
+
+            if (await UserExists(registerDTO.UserName))
             {
                 res.Success = false;
                 res.Message = "User already exists";
@@ -51,12 +49,12 @@ namespace Booking.Services
             CreatePasswordHash(registerDTO.Password, out byte[] passwordHash, out byte[] passwordSalt);
             var user = new User()
             {
-                UserName= registerDTO.UserName,
-                PasswordHash=passwordHash,
-                PasswordSalt=passwordSalt,
-                Status= Enums.Status.Active,
+                UserName = registerDTO.UserName,
+                PasswordHash = passwordHash,
+                PasswordSalt = passwordSalt,
+                Status = Enums.Status.Active,
                 Role = registerDTO.UserRole,
-                email= registerDTO.Email,
+                email = registerDTO.Email,
             };
             await _context.Users.AddAsync(user);
             await _context.SaveChangesAsync();
@@ -69,14 +67,14 @@ namespace Booking.Services
 
         }
 
-        public async Task<LoginResponse> Login(UserLoginDTO loginDTO)
+        public async Task<ResponseT<string>> Login(UserLoginDTO loginDTO)
         {
             var user = await _context.Users.FirstOrDefaultAsync(x => x.UserName.ToLower() == loginDTO.UserName.ToLower());
             if (user is null || user.Status != Enums.Status.Active)
             {
-                return new LoginResponse(false,"User does not exists");
+                return new ResponseT<string>(false, null, "User does not exists");
             }
-            var res = new LoginResponse(true, $"Welcome {user.UserName}");
+            var res = new ResponseT<string>(true, null, $"Welcome {user.UserName}");
             if (!VerifyPasswordHash(loginDTO.Password, user.PasswordHash, user.PasswordSalt))
             {
                 res.Success = false;
@@ -86,7 +84,7 @@ namespace Booking.Services
             else
             {
                 var result = GenerateTokens(user, loginDTO.StaySignedIn);
-                res.Token = result.AccessToken;
+                res.Data = result.AccessToken;
             }
 
             if (loginDTO.StaySignedIn)
@@ -94,23 +92,13 @@ namespace Booking.Services
                 _context.Users.Update(user);
                 await _context.SaveChangesAsync();
             }
-       
-
-
-            return res ;
-
+            return res;
         }
 
 
 
 
-
-
-
-
-
-
-
+        #region
 
         private async Task<bool> UserExists(string userName)
         {
@@ -204,5 +192,8 @@ namespace Booking.Services
 
             return handler.WriteToken(token);
         }
+        #endregion
+
+
     }
 }

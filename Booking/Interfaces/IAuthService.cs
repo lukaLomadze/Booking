@@ -1,13 +1,13 @@
 ﻿
 using Booking.Models.DTOs;
-using Booking.Responses.AuthResponses;
+using Booking.Responses;
 
 
 namespace Booking.Interfaces
 {
     public interface IAuthService
     {
-        Task<RegisterResponse> Register(UserRegisterDTO registerDTO);
-        Task<LoginResponse> Login(UserLoginDTO loginDTO);
+        Task<ResponseC> Register(UserRegisterDTO registerDTO);
+        Task<ResponseT<string>> Login(UserLoginDTO loginDTO);
     }
 }

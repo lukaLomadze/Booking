@@ -1,21 +1,20 @@
-﻿using Booking.Models.DTOs;
-using Booking.Responses.RoomResponse;
+﻿using Azure;
+using Booking.Models.DTOs;
+using Booking.Models.DTOs.Room;
+using Booking.Models.Entities;
+using Booking.Responses;
+
 
 namespace Booking.Interfaces
 {
     public interface IRoomService
     {
-        public Task<AddRoomResponse> AddAsync(AddRoomDTO dto, int rAdminId);
-        public Task<GetAllRoomResponse> GetAllAsync();
-        public Task<GetByIdRoomResponse> GetByIdAsync(int id);
-
-        public Task<GetAllRoomResponse> GetAdminsAllAsync(int AdminId, int rAdminId);
-        public Task<GetByIdRoomResponse> GetAdminsByIdAsync(int id, int AdminId, int rAdminId);
-
-        public Task<DeleteRoomResponse> DeleteAsync(int id, int adminId);
-        public Task<UpdateRoomResponse> UpdateAsync(UpdateRoomDTO dto, int adminId);
-
-        public Task<GetRoomTypesResponse> GetRoomTypes();
+        public Task<ResponseC> AddAsync(AddRoomDTO dto, int adminId);
+        public Task<ResponseT<List<RoomDTO>>> GetAllAsync(int userId);
+        public Task<ResponseT<RoomDTO>> GetByIdAsync(int id, int userId);
+        public Task<ResponseC> DeleteAsync(int id, int adminId);
+        public Task<ResponseC> UpdateAsync(UpdateRoomDTO dto, int adminId);
+        public Task<ResponseT<List<RoomType>>> GetRoomTypes();
 
 
 

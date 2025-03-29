@@ -1,4 +1,6 @@
-﻿namespace Booking.Models.Entities
+﻿using Booking.Enums;
+
+namespace Booking.Models.Entities
 {
     public class Reservation : BaseClass
     {
@@ -10,8 +12,9 @@
         public decimal totalPrice { get; set; }
         public bool isConfirmed { get; set; }
         public int userId { get; set; }
-       public User user { get; set; }
-
+        public User user { get; set; }
+        public Status status { get; set; } = Status.Active;
+        public string Confirmation { get; set; }
 
     }
 }

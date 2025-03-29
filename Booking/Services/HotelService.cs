@@ -1,9 +1,12 @@
-﻿using Booking.Data;
+﻿using AutoMapper;
+using Azure;
+using Booking.Data;
 using Booking.Enums;
 using Booking.Interfaces;
 using Booking.Models.DTOs;
+using Booking.Models.DTOs.Hotel;
 using Booking.Models.Entities;
-using Booking.Responses.HotelResponses;
+using Booking.Responses;
 using Microsoft.EntityFrameworkCore;
 namespace Booking.Services
 {
@@ -11,141 +14,120 @@ namespace Booking.Services
     {
 
         private readonly ApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
-        public HotelService(ApplicationDbContext context) { 
+        public HotelService(ApplicationDbContext context, IMapper mapper)
+        {
             _context = context;
-        
+            _mapper = mapper;
         }
 
-        public async Task<AddHotelResponse> CreateHotelAsync(AddHotelDTO dto)
+        public async Task<ResponseC> CreateHotelAsync(AddHotelDTO dto, int adminId)
         {
             try
             {
-                await _context.Hotels.AddAsync(new Hotel()
-                {
-                    name = dto.name,
-                    address = dto.address,
-                    city = dto.city,
-                    featuredImage = dto.featuredImage,
-                    CreatorId = dto.CreatorId});
+                var hotel = _mapper.Map<Hotel>(dto);
+                hotel.CreatorId = adminId;
+                await _context.Hotels.AddAsync(hotel);
                 await _context.SaveChangesAsync();
-                return new AddHotelResponse(true, "hotel added successfully");
+                return new ResponseC(true, "hotel added successfully");
 
-            }catch (Exception ex)
-            {
-                return new AddHotelResponse(false, ex.Message);
-            }
-
-
-        } 
-        public async Task<GetAllHotelResponse> GetAllAsync()
-        {
-            try { 
-   
-                var hotels =  await _context.Hotels.Include(x => x.rooms).ToListAsync();
-                return new GetAllHotelResponse(true, hotels, null);
-
-            }catch (Exception ex)
-            {
-                return new GetAllHotelResponse(false, null, ex.Message);
-
-
-            }
-
-            
-
-        }
-        public async Task<GetByIdHotelResponse> GetByIdAsync(int id)
-        {
-            try
-            {
-                var hotel = await _context.Hotels.FirstOrDefaultAsync(x => x.Id == id);
-                if (hotel == null) return new GetByIdHotelResponse(false, null,"hotel does not exists");
-                
-                return new GetByIdHotelResponse(true, hotel,null);
             }
             catch (Exception ex)
             {
-                return new GetByIdHotelResponse(false,null, ex.Message);
+                return new ResponseC(false, ex.Message);
             }
+
 
         }
-        public async Task<DeleteHotelResponse> DeleteHotelAcync(int hotelId, int adminId)
-        {
-            try {
-                var hotel = _context.Hotels.FirstOrDefault(x => (x.Id == hotelId ) && ( x.CreatorId == adminId));
-                if (hotel == null) return new DeleteHotelResponse(false, "hotel does not exists");
-                 _context.Hotels.Remove(hotel);
-                await _context.SaveChangesAsync();
-                return new DeleteHotelResponse(true, "hotel deleted successfully");
-            }
-            catch (Exception ex) {
-                return new DeleteHotelResponse(false, ex.Message);
-
-
-            }
-        }
-        public async Task<UpdateHotelResponse> UpdateHotelAsync(UpdateHotelDTO dto, int adminId)
+        public async Task<ResponseT<List<HotelDTO>>> GetAllAsync(int UserId)
         {
             try
             {
-                var hotel = await _context.Hotels.FirstOrDefaultAsync(x =>( x.Id == dto.Id) && (x.CreatorId == adminId));
-                if (hotel == null ) return new UpdateHotelResponse(false,  "hotel does not exists");
+                var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == UserId && x.Status == Enums.Status.Active);
+                var hotels = await _context.Hotels.Include(x => x.rooms.Where(z => z.status == Status.Active)).Where(x => x.status == Enums.Status.Active).ToListAsync();
+                if (user != null && hotels != null && user.Role == Enums.Role.Hoteladmin)
+                {
+                    hotels = hotels.Where(x => x.CreatorId == user.Id).ToList();
+                }
+                var h = new List<HotelDTO>();
+                if (hotels != null) hotels.ForEach(x => h.Add(_mapper.Map<HotelDTO>(x)));
+                return new ResponseT<List<HotelDTO>>(true, h, null);
+            }
+            catch (Exception ex)
+            {
+                return new ResponseT<List<HotelDTO>>(false, null, ex.Message);
+            }
+        }
 
-                hotel.city = dto.city;
-                hotel.address = dto.address;
+        public async Task<ResponseT<HotelDTO>> GetByIdAsync(int id, int UserId)
+        {
+            try
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == UserId && x.Status == Enums.Status.Active);
+                var hotel = await _context.Hotels.Include(x => x.rooms.Where(z => z.status == Status.Active)).FirstOrDefaultAsync(x => (x.Id == id) && (x.status == Enums.Status.Active));
+
+                if (hotel == null || (user != null && user.Role == Enums.Role.Hoteladmin && hotel.CreatorId != user.Id))
+                {
+                    return new ResponseT<HotelDTO>(false, null, "hotel not found");
+                }
+                return new ResponseT<HotelDTO>(true, _mapper.Map<HotelDTO>(hotel), null);
+            }
+            catch (Exception ex)
+            {
+                return new ResponseT<HotelDTO>(false, null, ex.Message);
+            }
+
+        }
+        public async Task<ResponseC> DeleteHotelAcync(int hotelId, int adminId)
+        {
+            try
+            {
+                var hotel = await _context.Hotels.Include(x => x.rooms).FirstAsync(x => x.Id == hotelId);
+
+                if (hotel == null || hotel.CreatorId != adminId ||
+                  hotel.status != Enums.Status.Active) return new ResponseC(false, "hotel not found");
+
+                foreach (var item in hotel.rooms)
+                {
+                    if (item.avaliable) return new ResponseC(false, "Cannot delete hotel with existing rooms");
+
+                }
+                hotel.status = Enums.Status.Deleted;
+                _context.Hotels.Update(hotel);
+                await _context.SaveChangesAsync();
+                return new ResponseC(true, "hotel deleted successfully");
+            }
+            catch (Exception ex)
+            {
+                return new ResponseC(false, ex.Message);
+
+
+            }
+        }
+        public async Task<ResponseC> UpdateHotelAsync(UpdateHotelDTO dto, int adminId)
+        {
+            try
+            {
+                var hotel = await _context.Hotels.FirstOrDefaultAsync(x => (x.Id == dto.Id) && (x.CreatorId == adminId) && x.status == Enums.Status.Active);
+                if (hotel == null) return new ResponseC(false, "hotel does not exists");
                 hotel.name = dto.name;
+                hotel.address = dto.address;
+                hotel.city = dto.city;
                 hotel.featuredImage = dto.featuredImage;
                 hotel.ModifierId = adminId;
-                hotel.LastModifiedDate= DateTime.Now;
-
+                hotel.LastModifiedDate = DateTime.Now;
+                hotel.CreatorId = adminId;
+                _context.Hotels.Update(hotel);
                 await _context.SaveChangesAsync();
-
-
-                return new UpdateHotelResponse(true,  "Hotel Updated successfully");
+                return new ResponseC(true, "Hotel Updated successfully");
             }
             catch (Exception ex)
             {
-                return new UpdateHotelResponse(false, ex.Message);
+                return new ResponseC(false, ex.Message);
             }
-
-
-
         }
 
-       public async Task<GetAllHotelResponse>  GetUsersAllAsync(int adminId)
-        {
-            try
-            {
 
-                var hotels =  await _context.Hotels.Where(x => x.CreatorId == adminId).ToListAsync();
-                return new GetAllHotelResponse(true, hotels, null);
-
-            }
-            catch (Exception ex)
-            {
-                return new GetAllHotelResponse(false, null, ex.Message);
-
-
-            }
-
-
-        }
-
-        public  async Task<GetByIdHotelResponse> GetUsersByIdAsync(int id, int adminId)
-        {
-        try
-            {
-                var hotel = await _context.Hotels.FirstOrDefaultAsync(x => (x.Id == id) && (x.CreatorId == adminId));
-                if (hotel == null) return new GetByIdHotelResponse(false, null,"hotel does not exists");
-                
-                return new GetByIdHotelResponse(true, hotel,null);
-}
-            catch (Exception ex)
-            {
-                return new GetByIdHotelResponse(false, null, ex.Message);
-            }
-         
-        }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using Booking.Interfaces;
 using Booking.Models.DTOs;
-using Booking.Responses.RoomResponse;
+using Booking.Models.DTOs.Room;
+using Booking.Models.Entities;
+using Booking.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -20,7 +22,7 @@ namespace Booking.Controllers
         }
         [HttpPost]
         [Authorize(Roles = "Hoteladmin")]
-        public async Task<AddRoomResponse> AddAsync(AddRoomDTO dto)
+        public async Task<ResponseC> AddAsync(AddRoomDTO dto)
         {
             int rAdminId;
             int.TryParse((User.FindFirst(ClaimTypes.NameIdentifier)?.Value), out rAdminId);
@@ -29,42 +31,29 @@ namespace Booking.Controllers
         }
 
         [HttpGet]
-        public async Task<GetAllRoomResponse> GetAllAsync()
+        public async Task<ResponseT<List<RoomDTO>>> GetAllAsync()
         {
-            return await  roomService.GetAllAsync();
+            int userId;
+            int.TryParse((User.FindFirst(ClaimTypes.NameIdentifier)?.Value), out userId);
+            return await  roomService.GetAllAsync(userId);
         }
 
 
         [HttpGet("{id}")]
-        public async Task<GetByIdRoomResponse> GetByIdAsync(int id)
+        public async Task<ResponseT<RoomDTO>> GetByIdAsync(int id)
         {
-            return await roomService.GetByIdAsync(id);
+            int userId;
+            int.TryParse((User.FindFirst(ClaimTypes.NameIdentifier)?.Value), out userId);
+            return await roomService.GetByIdAsync(id, userId);
         }
 
 
-        [HttpGet("Admin's all {id}")]
-        [Authorize(Roles ="Hoteladmin")]
-        public async Task<GetAllRoomResponse> GetAdminsAllAsync(int AdminId)
-        {
-            int rAdminId;
-            int.TryParse((User.FindFirst(ClaimTypes.NameIdentifier)?.Value), out rAdminId);
-            return await roomService.GetAdminsAllAsync(AdminId, rAdminId);
-        }
-
-
-        [HttpGet("Admin's one {id} {AdminId}")]
-        [Authorize(Roles = "Hoteladmin")]
-        public async Task<GetByIdRoomResponse> GetAdminsByIdAsync(int id, int AdminId)
-        {
-            int rAdminId;
-            int.TryParse((User.FindFirst(ClaimTypes.NameIdentifier)?.Value), out rAdminId);
-            return await roomService.GetAdminsByIdAsync(id, AdminId , rAdminId);
-        }
+       
 
 
         [HttpDelete]
         [Authorize(Roles = "Hoteladmin")]
-        public async Task<DeleteRoomResponse> DeleteAsync(int id)
+        public async Task<ResponseC> DeleteAsync(int id)
         {
             int rAdminId;
             int.TryParse((User.FindFirst(ClaimTypes.NameIdentifier)?.Value), out rAdminId);
@@ -75,7 +64,7 @@ namespace Booking.Controllers
 
         [HttpPut]
         [Authorize(Roles = "Hoteladmin")]
-        public async Task<UpdateRoomResponse> UpdateAsync(UpdateRoomDTO dto)
+        public async Task<ResponseC> UpdateAsync(UpdateRoomDTO dto)
         {
             int rAdminId;
             int.TryParse((User.FindFirst(ClaimTypes.NameIdentifier)?.Value), out rAdminId);
@@ -83,7 +72,7 @@ namespace Booking.Controllers
         }
 
         [HttpGet("GetRoomTypes")]
-        public async Task<GetRoomTypesResponse> GetRoomTypes()
+        public async Task<ResponseT<List<RoomType>>> GetRoomTypes()
         {
             return await roomService.GetRoomTypes();
         }

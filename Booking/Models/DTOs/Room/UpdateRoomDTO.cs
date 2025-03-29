@@ -1,4 +1,6 @@
-﻿namespace Booking.Models.DTOs
+﻿using Booking.Enums;
+
+namespace Booking.Models.DTOs
 {
     public class UpdateRoomDTO
     {
@@ -8,5 +10,6 @@
         public bool avaliable { get; set; }
         public int maximumGuests { get; set; }
         public int roomTypeId { get; set; }
+        public Status status { get; set; }
     }
 }

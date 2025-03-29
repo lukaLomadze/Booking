@@ -54,7 +54,7 @@ namespace Booking
 
 
 
-
+            builder.Services.AddTransient<IEmailSenderService, EmailSenderService>();
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -86,7 +86,7 @@ namespace Booking
                });
 
             builder.Services.AddAuthorization();
-
+            builder.Services.AddAutoMapper(typeof(Program));
 
 
 

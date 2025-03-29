@@ -1,7 +1,7 @@
 ﻿using Booking.Enums;
 using Booking.Interfaces;
 using Booking.Models.DTOs;
-using Booking.Responses.AuthResponses;
+using Booking.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -20,19 +20,16 @@ namespace Booking.Controllers
         }
 
         [HttpPost("Register")]
-        public async Task<RegisterResponse> Register(UserRegisterDTO userRegisterDTO)
+        public async Task<ResponseC> Register(UserRegisterDTO userRegisterDTO)
         {
-           return  await _authService.Register(userRegisterDTO);
+            return await _authService.Register(userRegisterDTO);
         }
 
 
         [HttpPost("Login")]
-        public async Task<LoginResponse> Login(UserLoginDTO userLoginDTO)
+        public async Task<ResponseT<string>> Login(UserLoginDTO userLoginDTO)
         {
-            return  await _authService.Login(userLoginDTO);
+            return await _authService.Login(userLoginDTO);
         }
-       
-
-
     }
 }

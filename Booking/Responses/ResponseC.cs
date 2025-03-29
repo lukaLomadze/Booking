@@ -1,13 +1,12 @@
-﻿namespace Booking.Responses.HotelResponses
+﻿namespace Booking.Responses
 {
-    public class UpdateHotelResponse
+    public class ResponseC
     {
         public bool Success { get; set; }
         public string Message { get; set; }
-        public UpdateHotelResponse(bool s, string m)
+        public ResponseC(bool s,  string m)
         {
             Success = s;
-
             Message = m;
         }
     }
