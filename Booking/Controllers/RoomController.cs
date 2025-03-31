@@ -20,6 +20,7 @@ namespace Booking.Controllers
             this.roomService = roomService;
 
         }
+
         [HttpPost]
         [Authorize(Roles = "Hoteladmin")]
         public async Task<ResponseC> AddAsync(AddRoomDTO dto)
@@ -29,6 +30,7 @@ namespace Booking.Controllers
             return await roomService.AddAsync(dto, rAdminId);
 
         }
+
 
         [HttpGet]
         public async Task<ResponseT<List<RoomDTO>>> GetAllAsync()

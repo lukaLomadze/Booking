@@ -29,7 +29,7 @@ namespace Booking.Services
             var room = await _context.Rooms.Include(x => x.Reservations).FirstOrDefaultAsync(x => x.Id == dto.roomId && x.status == Status.Active);
             if (room == null) return new ResponseC(false, "Room not found");
             if (dto.checkInData >= dto.checkOutData) return new ResponseC(false, "dates are incorrect");
-            if (!room.avaliable || !isfree(room, dto.checkInData, dto.checkOutData)) return new ResponseC(false, "Room is not avaliable");
+            if (!room.avaliable || !isfree(room, dto.checkInData, dto.checkOutData , -1)) return new ResponseC(false, "Room is not avaliable");
             var user = await _context.Users.FindAsync(userId);
             Random random = new Random();
             string c = "";
@@ -77,23 +77,17 @@ namespace Booking.Services
 
         public async Task<ResponseC> UpdateAsync(UpdateReservationDTO dto, int userId)
         {
-
-
-            var rese = await _context.Reservations.FirstOrDefaultAsync(x =>
+            var rese = await _context.Reservations.Include(x=>x.room).FirstOrDefaultAsync(x =>
             x.Id == dto.Id && x.CreatorId == userId && x.status == Status.Active);
             if (rese == null) return new ResponseC(false, "ReservationNotFound");
             if (dto.checkInData >= dto.checkOutData) return new ResponseC(false, "dates are incorrect");
+            if (!isfree(rese.room, dto.checkInData, dto.checkOutData, dto.Id)) return new ResponseC(false, "Room is not avaliable");
             rese.totalPrice = rese.totalPrice / (rese.checkOutData - rese.checkInData).Days * (dto.checkOutData - dto.checkInData).Days;
             rese.checkOutData = dto.checkOutData;
             rese.checkInData = dto.checkInData;
             _context.Reservations.Update(rese);
             await _context.SaveChangesAsync();
             return new ResponseC(true, "Reservation updated");
-
-
-
-
-
 
         }
 
@@ -188,12 +182,13 @@ namespace Booking.Services
 
 
         #region
-        private bool isfree(Room room, DateTime checkIn, DateTime checkOut)
+        private bool isfree(Room room, DateTime checkIn, DateTime checkOut, int resId)
         {
             if (room == null) return false;
             if (room.Reservations == null) return true;
             foreach (var res in room.Reservations)
             {
+                if (res.Id == resId) continue;
                 if (!(res.checkInData >= checkOut || res.checkOutData <= checkIn))
                 {
                     return false;

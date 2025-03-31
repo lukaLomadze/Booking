@@ -59,6 +59,7 @@ namespace Booking.Controllers
             var role = User.FindFirst(ClaimTypes.Role)?.Value;
             return await reservationService.GetAllAsync(role, userId);
         }
+       
         [HttpGet("{id}")]
         [Authorize]
         public async Task<ResponseT<ReservationDTO>> GetByIdAsync(int id)
@@ -69,7 +70,8 @@ namespace Booking.Controllers
             return await reservationService.GetByIdAsync(id, role,userId);
         }
 
-        [HttpGet("Room's Reservations {id}")] 
+
+        [HttpGet("Room's Reservations {roomId}")] 
         [Authorize]
         public Task<ResponseT<List<ReservationDTO>>> GetRoomsAsync(int roomId)
         {
@@ -78,6 +80,7 @@ namespace Booking.Controllers
             var role = User.FindFirst(ClaimTypes.Role)?.Value;
             return reservationService.GetRoomsAsync(roomId,role, userId);
         }
+
 
         [HttpPost("Confirm")]
         [Authorize(Roles = "Guest")]

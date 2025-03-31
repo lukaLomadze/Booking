@@ -26,10 +26,6 @@ namespace Booking.Services
         {
             var image = await _context.Images.FirstOrDefaultAsync(x => x.Id == id && x.CreatorId == userId);
             if (image == null) return new ResponseC(false, "Image not found");
-
-
-
-            //var room = await _roomService.
             image.status = Enums.Status.Deleted;
             await _context.SaveChangesAsync();
             return new ResponseC(true, "Image deleted");
@@ -49,8 +45,6 @@ namespace Booking.Services
             {
                 images = images.Where(x => x.status == Enums.Status.Active).ToList();
             }
-
-
 
             var dtos = new List<ImageDTO>();
 

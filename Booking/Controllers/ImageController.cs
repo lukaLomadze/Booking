@@ -30,6 +30,8 @@ namespace Booking.Controllers
             int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out userId);
             return await _imageService.AddAsync(dto, userId);
         }
+       
+        
         [HttpGet]
         public async Task<ResponseT<List<ImageDTO>>> GetAllAsync()
         {
@@ -37,6 +39,7 @@ namespace Booking.Controllers
             int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out userId);
             return await _imageService.GetAllAsync(userId);
         }
+       
         [HttpGet("{id}")]
         public async Task<ResponseT<ImageDTO>> GetByIdAsync(int id)
         {
@@ -44,6 +47,7 @@ namespace Booking.Controllers
             int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out userId);
             return await _imageService.GetByIdAsync(id, userId);
         }
+       
         [HttpDelete]
         [Authorize(Roles = "Hoteladmin")]
         public async Task<ResponseC> DeleteAsync(int id)

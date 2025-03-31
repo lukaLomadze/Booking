@@ -39,6 +39,7 @@ namespace Booking.Controllers
             return await hotelService.GetAllAsync(UserId);
         }
 
+
         [HttpGet("{id}")]
         public async Task<ResponseT<HotelDTO>> GetById(int id)
         {
@@ -56,6 +57,7 @@ namespace Booking.Controllers
             int.TryParse(( User.FindFirst(ClaimTypes.NameIdentifier)?.Value), out  adminId);
             return await hotelService.DeleteHotelAcync(hotelId, adminId);
         }
+
 
         [HttpPut]
         [Authorize(Roles = "Hoteladmin")]
