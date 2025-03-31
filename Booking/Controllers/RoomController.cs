@@ -71,6 +71,18 @@ namespace Booking.Controllers
             return await roomService.UpdateAsync(dto,rAdminId);
         }
 
+        [HttpPost("Filter")]
+
+        public async Task<ResponseT<List<RoomDTO>>> FilterAsync(FilterRoomDTO filter)
+        {
+            int userId;
+            int.TryParse((User.FindFirst(ClaimTypes.NameIdentifier)?.Value), out userId);
+            return await roomService.FilterAsync(filter, userId);
+        }
+
+
+
+
         [HttpGet("GetRoomTypes")]
         public async Task<ResponseT<List<RoomType>>> GetRoomTypes()
         {

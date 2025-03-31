@@ -69,7 +69,7 @@ namespace Booking.Controllers
             return await reservationService.GetByIdAsync(id, role,userId);
         }
 
-        [HttpGet("Room's Reservations")] 
+        [HttpGet("Room's Reservations {id}")] 
         [Authorize]
         public Task<ResponseT<List<ReservationDTO>>> GetRoomsAsync(int roomId)
         {

@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
+using Booking.Models;
 using Booking.Models.DTOs;
 using Booking.Models.DTOs.Hotel;
+using Booking.Models.DTOs.Image;
 using Booking.Models.DTOs.Reservation;
 using Booking.Models.DTOs.Room;
 using Booking.Models.Entities;
@@ -20,6 +22,8 @@ namespace Booking
             CreateMap<Room, RoomDTO>().ReverseMap();
             CreateMap<RoomType, RoomTypeDTO>().ReverseMap();
             CreateMap<Reservation, ReservationDTO>().ReverseMap();
+            CreateMap<Image, ImageDTO>().ReverseMap();
+            CreateMap<Image, AddImageDTO>().ReverseMap();
 
         }
     }

@@ -1,6 +1,7 @@
 ﻿using Booking.Enums;
 using Booking.Interfaces;
 using Booking.Models.DTOs;
+using Booking.Models.Entities;
 using Booking.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -30,6 +31,13 @@ namespace Booking.Controllers
         public async Task<ResponseT<string>> Login(UserLoginDTO userLoginDTO)
         {
             return await _authService.Login(userLoginDTO);
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "SuperAdmin")]
+        public async Task<ResponseT<List<User>>> GetAll()
+        {
+            return await _authService.GetAll();
         }
     }
 }

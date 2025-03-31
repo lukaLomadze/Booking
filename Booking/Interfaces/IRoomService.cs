@@ -15,7 +15,7 @@ namespace Booking.Interfaces
         public Task<ResponseC> DeleteAsync(int id, int adminId);
         public Task<ResponseC> UpdateAsync(UpdateRoomDTO dto, int adminId);
         public Task<ResponseT<List<RoomType>>> GetRoomTypes();
-
+        public Task<ResponseT<List<RoomDTO>>> FilterAsync(FilterRoomDTO dto, int userId);
 
 
 

@@ -30,23 +30,13 @@ namespace Booking.Services
 
         public async Task<ResponseC> Register(UserRegisterDTO registerDTO)
         {
-            var res = new ResponseC(false, "");
-            if (registerDTO.UserRole == Enums.Role.SuperAdmin)
-            {
-                res.Success = false;
-                res.Message = "Unknown role";
-                return res;
 
-            }
-
-
-            if (await UserExists(registerDTO.UserName))
-            {
-                res.Success = false;
-                res.Message = "User already exists";
-                return res;
-            }
+            if (registerDTO.UserRole != Enums.Role.Guest && registerDTO.UserRole != Enums.Role.Hoteladmin)
+                return new ResponseC(false, "Unknown role");
+            if (await UserExists(registerDTO.UserName)) return new ResponseC(false, "User already exists");
+            if(registerDTO.ConfirmPassword != registerDTO.Password) return new ResponseC(false,"Passwords do not match" );
             CreatePasswordHash(registerDTO.Password, out byte[] passwordHash, out byte[] passwordSalt);
+
             var user = new User()
             {
                 UserName = registerDTO.UserName,
@@ -59,10 +49,7 @@ namespace Booking.Services
             await _context.Users.AddAsync(user);
             await _context.SaveChangesAsync();
 
-            res.Success = true;
-            res.Message = "User registered successfuly";
-
-            return res;
+            return new ResponseC(true, "User registered successfuly");
 
 
         }
@@ -75,12 +62,8 @@ namespace Booking.Services
                 return new ResponseT<string>(false, null, "User does not exists");
             }
             var res = new ResponseT<string>(true, null, $"Welcome {user.UserName}");
-            if (!VerifyPasswordHash(loginDTO.Password, user.PasswordHash, user.PasswordSalt))
-            {
-                res.Success = false;
-                res.Message = "Incorrect password";
-                return res;
-            }
+            if (!VerifyPasswordHash(loginDTO.Password, user.PasswordHash, user.PasswordSalt)) 
+                return new ResponseT<string>(false, null,"Incorrect password" );
             else
             {
                 var result = GenerateTokens(user, loginDTO.StaySignedIn);
@@ -95,6 +78,12 @@ namespace Booking.Services
             return res;
         }
 
+
+       public async Task<ResponseT<List<User>>> GetAll()
+        {
+            var users = await _context.Users.ToListAsync();
+            return new ResponseT<List<User>>(true, users, "");
+        }
 
 
 

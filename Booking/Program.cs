@@ -1,6 +1,7 @@
 
 using Booking.Data;
 using Booking.Interfaces;
+using Booking.Midleware;
 using Booking.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -64,7 +65,7 @@ namespace Booking
             builder.Services.AddScoped<IHotelService, HotelService>();
             builder.Services.AddScoped<IReservationService, ReservationService>();
             builder.Services.AddScoped<IRoomService, RoomService>();
-
+            builder.Services.AddScoped<IImageService, ImageService>();
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -91,7 +92,7 @@ namespace Booking
 
 
             var app = builder.Build();
-
+            app.UseMiddleware<ExceptionsMiddleware>();
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
